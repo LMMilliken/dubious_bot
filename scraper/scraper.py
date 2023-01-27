@@ -2,6 +2,7 @@ import argparse
 import time
 import json
 import csv
+from os.path import isfile
 
 import selenium.common.exceptions
 from selenium import webdriver
@@ -10,7 +11,7 @@ from bs4 import BeautifulSoup as bs
 
 from bs_utils import get_posts
 
-with open('facebook_credentials.txt') as file:
+with open('_-_facebook_credentials.txt') as file:
     EMAIL = file.readline()
     PASSWORD = file.readline()
 
@@ -391,12 +392,14 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
 
 
 def parseSoup(bs_data):
-    print('here')
     data = [tag.text for tag in
             bs_data.find_all(lambda tag: tag.name == 'div' and 'text-align:' in tag.get('style', ''))]
     # print(data)
 
-    posts = get_posts(bs_data)
+    posts = [post.replace('… See more', '...')
+        for post in get_posts(bs_data)
+    ]
+    return posts
     print('\n\n-----------------------\n\n'.join(posts))
     # Convert the extracted information to a JSON string
     json_data = json.dumps(data)
@@ -406,23 +409,27 @@ def parseSoup(bs_data):
     # print('\n------------------------------------------\n'.join(python_dict))
 
 
-def main():
-    with open("raw.html", "r", encoding="utf8") as f:
+def extract_local(fname_in, num_posts, fname_out = None):
+    with open(fname_in, "r", encoding="utf8") as f:
         html = f.read()
-    
-    # Parse the HTML using BeautifulSoup
-    print('souping')
-    soup = bs(html, "html.parser")
-    print('parsing')
-    parseSoup(soup)
-    return 
 
+    soup = bs(html, "html.parser")
+    posts = parseSoup(soup)[:num_posts]
+
+    if fname_out:
+        with open(fname_out, 'w') as f:
+            for post in posts:
+                f.write(post + '\nPOST!!!BREAK')
+    return posts
+
+def main():
 
     parser = argparse.ArgumentParser(description="Facebook Page Scraper")
     required_parser = parser.add_argument_group("required arguments")
     required_parser.add_argument('-page', '-p', help="The Facebook Public Page you want to scrape", required=True)
-    required_parser.add_argument('-len', '-l', help="Number of Posts you want to scrape", type=int, required=True)
     optional_parser = parser.add_argument_group("optional arguments")
+    optional_parser.add_argument('-len', '-l', help="Number of Posts you want to scrape", type=int, default=5)
+    optional_parser.add_argument('-out', '-o', help="Name of file to write to", default=None)
     optional_parser.add_argument('-infinite', '-i',
                                  help="Scroll until the end of the page (1 = infinite) (Default is 0)", type=int,
                                  default=0)
@@ -443,29 +450,34 @@ def main():
     if args.comments == 'y':
         scrape_comment = True
 
-    postBigDict = extract(page=args.page, numOfPost=args.len, infinite_scroll=infinite, scrape_comment=scrape_comment)
-
-    # TODO: rewrite parser
-    if args.usage == "WT":
-        with open('output.txt', 'w') as file:
-            for post in postBigDict:
-                file.write(json.dumps(post))  # use json load to recover
-
-    elif args.usage == "CSV":
-        with open('data.csv', 'w', ) as csvfile:
-            writer = csv.writer(csvfile)
-            # writer.writerow(['Post', 'Link', 'Image', 'Comments', 'Reaction'])
-            writer.writerow(['Post', 'Link', 'Image', 'Comments', 'Shares'])
-
-            for post in postBigDict:
-                writer.writerow([post['Post'], post['Link'], post['Image'], post['Comments'], post['Shares']])
-                # writer.writerow([post['Post'], post['Link'],post['Image'], post['Comments'], post['Reaction']])
+    if isfile(args.page):
+        extract_local(args.page, args.len, args.out)
 
     else:
-        for post in postBigDict:
-            print(post)
+            
+        postBigDict = extract(page=args.page, numOfPost=args.len, infinite_scroll=infinite, scrape_comment=scrape_comment)
 
-    print("Finished")
+        # TODO: rewrite parser
+        if args.usage == "WT":
+            with open('output.txt', 'w') as file:
+                for post in postBigDict:
+                    file.write(json.dumps(post))  # use json load to recover
+
+        elif args.usage == "CSV":
+            with open('data.csv', 'w', ) as csvfile:
+                writer = csv.writer(csvfile)
+                # writer.writerow(['Post', 'Link', 'Image', 'Comments', 'Reaction'])
+                writer.writerow(['Post', 'Link', 'Image', 'Comments', 'Shares'])
+
+                for post in postBigDict:
+                    writer.writerow([post['Post'], post['Link'], post['Image'], post['Comments'], post['Shares']])
+                    # writer.writerow([post['Post'], post['Link'],post['Image'], post['Comments'], post['Reaction']])
+
+        else:
+            for post in postBigDict:
+                print(post)
+
+        print("Finished")
 
 
 if __name__ == "__main__":
