@@ -1,17 +1,18 @@
 import argparse
-import time
-import json
 import csv
+import json
+import time
 from os.path import isfile
 
 import selenium.common.exceptions
+from bs4 import BeautifulSoup as bs
+from bs_utils import get_posts
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup as bs
 
-from bs_utils import get_posts
+from dubious_bot.constants import POST_BREAK
 
-with open('credentials/facebook_credentials.txt') as file:
+with open("credentials/facebook_credentials.txt") as file:
     EMAIL = file.readline()
     PASSWORD = file.readline()
 
@@ -21,7 +22,7 @@ def _extract_post_text(item):
     text = ""
     if actualPosts:
         for posts in actualPosts:
-            paragraphs = posts.find_all('p')
+            paragraphs = posts.find_all("p")
             text = ""
             for index in range(0, len(paragraphs)):
                 text += paragraphs[index].text
@@ -32,7 +33,7 @@ def _extract_link(item):
     postLinks = item.find_all(class_="_6ks")
     link = ""
     for postLink in postLinks:
-        link = postLink.find('a').get('href')
+        link = postLink.find("a").get("href")
     return link
 
 
@@ -49,7 +50,7 @@ def _extract_image(item):
     postPictures = item.find_all(class_="scaledImageFitWidth img")
     image = ""
     for postPicture in postPictures:
-        image = postPicture.get('src')
+        image = postPicture.get("src")
     return image
 
 
@@ -91,10 +92,10 @@ def _extract_comments(item):
         if comment_pic is not None:
             comments[commenter]["image"] = comment_pic.find(class_="img").get("src")
 
-        commentList = item.find('ul', {'class': '_7791'})
+        commentList = item.find("ul", {"class": "_7791"})
         if commentList:
             comments = dict()
-            comment = commentList.find_all('li')
+            comment = commentList.find_all("li")
             if comment:
                 for litag in comment:
                     aria = litag.find("div", {"class": "_4eek"})
@@ -112,33 +113,43 @@ def _extract_comments(item):
 
                         comment_pic = litag.find(class_="_2txe")
                         if comment_pic is not None:
-                            comments[commenter]["image"] = comment_pic.find(class_="img").get("src")
+                            comments[commenter]["image"] = comment_pic.find(
+                                class_="img"
+                            ).get("src")
 
                         repliesList = litag.find(class_="_2h2j")
                         if repliesList:
-                            reply = repliesList.find_all('li')
+                            reply = repliesList.find_all("li")
                             if reply:
-                                comments[commenter]['reply'] = dict()
+                                comments[commenter]["reply"] = dict()
                                 for litag2 in reply:
                                     aria2 = litag2.find("div", {"class": "_4efk"})
                                     if aria2:
                                         replier = aria2.find(class_="_6qw4").text
                                         if replier:
-                                            comments[commenter]['reply'][replier] = dict()
+                                            comments[commenter]["reply"][
+                                                replier
+                                            ] = dict()
 
-                                            reply_text = litag2.find("span", class_="_3l3x")
+                                            reply_text = litag2.find(
+                                                "span", class_="_3l3x"
+                                            )
                                             if reply_text:
-                                                comments[commenter]['reply'][replier][
-                                                    "reply_text"] = reply_text.text
+                                                comments[commenter]["reply"][replier][
+                                                    "reply_text"
+                                                ] = reply_text.text
 
                                             r_link = litag2.find(class_="_ns_")
                                             if r_link is not None:
-                                                comments[commenter]['reply']["link"] = r_link.get("href")
+                                                comments[commenter]["reply"][
+                                                    "link"
+                                                ] = r_link.get("href")
 
                                             r_pic = litag2.find(class_="_2txe")
                                             if r_pic is not None:
-                                                comments[commenter]['reply']["image"] = r_pic.find(
-                                                    class_="img").get("src")
+                                                comments[commenter]["reply"][
+                                                    "image"
+                                                ] = r_pic.find(class_="img").get("src")
     return comments
 
 
@@ -149,19 +160,19 @@ def _extract_reaction(item):
         return
     reaction = dict()
     for toolBar_child in toolBar[0].children:
-        str = toolBar_child['data-testid']
+        str = toolBar_child["data-testid"]
         reaction = str.split("UFI2TopReactions/tooltip_")[1]
 
         reaction[reaction] = 0
 
         for toolBar_child_child in toolBar_child.children:
 
-            num = toolBar_child_child['aria-label'].split()[0]
+            num = toolBar_child_child["aria-label"].split()[0]
 
             # fix weird ',' happening in some reaction values
-            num = num.replace(',', '.')
+            num = num.replace(",", ".")
 
-            if 'K' in num:
+            if "K" in num:
                 realNum = float(num[:-1]) * 1000
             else:
                 realNum = float(num)
@@ -171,10 +182,10 @@ def _extract_reaction(item):
 
 
 def _extract_html(source_data, bs_data):
-    with open('./raw.html', "w", encoding="utf-8") as file:
+    with open("./raw.html", "w", encoding="utf-8") as file:
         file.write(str(source_data))
 
-    with open('./bs.html', "w", encoding="utf-8") as file:
+    with open("./bs.html", "w", encoding="utf-8") as file:
         file.write(str(bs_data.prettify()))
 
     k = bs_data.find_all(class_="_5pcr userContentWrapper")
@@ -182,9 +193,9 @@ def _extract_html(source_data, bs_data):
 
     for item in k:
         postDict = dict()
-        postDict['Post'] = _extract_post_text(item)
-        postDict['Link'] = _extract_link(item)
-        postDict['PostId'] = _extract_post_id(item)
+        postDict["Post"] = _extract_post_text(item)
+        postDict["Link"] = _extract_link(item)
+        postDict["PostId"] = _extract_post_id(item)
         # postDict['Image'] = _extract_image(item)
         # postDict['Shares'] = _extract_shares(item)
         # postDict['Comments'] = _extract_comments(item)
@@ -192,8 +203,10 @@ def _extract_html(source_data, bs_data):
 
         # Add to check
         postBigDict.append(postDict)
-        with open('./postBigDict.json', 'w', encoding='utf-8') as file:
-            file.write(json.dumps(postBigDict, ensure_ascii=False).encode('utf-8').decode())
+        with open("./postBigDict.json", "w", encoding="utf-8") as file:
+            file.write(
+                json.dumps(postBigDict, ensure_ascii=False).encode("utf-8").decode()
+            )
 
     return postBigDict
 
@@ -211,7 +224,9 @@ def _login(browser, email, password):
     try:
         _enterLoginCredentials(browser, email, password)
     except selenium.common.exceptions.ElementClickInterceptedException:
-        cookies_button = browser.find_elements_by_xpath("//button[text()='Only allow essential cookies'][1]")[0]
+        cookies_button = browser.find_elements_by_xpath(
+            "//button[text()='Only allow essential cookies'][1]"
+        )[0]
         cookies_button.click()
         time.sleep(2)
         browser.find_elements_by_xpath("//button[text()='Log in'][1]")[0].click()
@@ -236,9 +251,13 @@ def _scroll(browser, infinite_scroll, lenOfPage):
 
     while not match:
 
-        button = browser.find_elements_by_xpath("//div[@role='button' and normalize-space(text())='See more']")[0]
+        button = browser.find_elements_by_xpath(
+            "//div[@role='button' and normalize-space(text())='See more']"
+        )[0]
 
-        seeMoreButtons = browser.find_elements_by_xpath("//div[@role='button' and normalize-space(text())='See more']")
+        seeMoreButtons = browser.find_elements_by_xpath(
+            "//div[@role='button' and normalize-space(text())='See more']"
+        )
 
         for button in seeMoreButtons:
             button.click()
@@ -253,7 +272,9 @@ def _scroll(browser, infinite_scroll, lenOfPage):
         time.sleep(5)
 
         # Find all elements with ::before class
-        before_elements = browser.find_elements_by_xpath("//*[contains(@class,'::before')]")
+        before_elements = browser.find_elements_by_xpath(
+            "//*[contains(@class,'::before')]"
+        )
 
         print("------------------------")
         print("Len Before", len(before_elements))
@@ -266,10 +287,13 @@ def _scroll(browser, infinite_scroll, lenOfPage):
         # Iterate through each ::before element
         for before in before_elements:
             # Find the following ::after element
-            after = before.find_element_by_xpath("following-sibling::*[contains(@class,'::after')]")
+            after = before.find_element_by_xpath(
+                "following-sibling::*[contains(@class,'::after')]"
+            )
             # Find all divs between ::before and ::after
             divs = before.find_elements_by_xpath(
-                "following-sibling::*[preceding-sibling::*[contains(@class,'::before')] and following-sibling::*[contains(@class,'::after')] and self::div]")
+                "following-sibling::*[preceding-sibling::*[contains(@class,'::before')] and following-sibling::*[contains(@class,'::after')] and self::div]"
+            )
             # Append the list of divs to the main list
             divs_list.append([div.text for div in divs])
 
@@ -281,7 +305,8 @@ def _scroll(browser, infinite_scroll, lenOfPage):
         print("----------------------------------")
         posts = browser.find_elements_by_xpath("//div[contains(@style,'text-align:')]")
         divs = browser.find_elements_by_xpath(
-            "//div[preceding-sibling::*[contains(@class,'::before')] and following-sibling::*[contains(@class,'::after')]]")
+            "//div[preceding-sibling::*[contains(@class,'::before')] and following-sibling::*[contains(@class,'::after')]]"
+        )
 
         print("----------------------------------")
         print(divs)
@@ -296,11 +321,13 @@ def _scroll(browser, infinite_scroll, lenOfPage):
         if infinite_scroll:
             lenOfPage = browser.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight);var lenOfPage=document.body.scrollHeight;return "
-                "lenOfPage;")
+                "lenOfPage;"
+            )
         else:
             browser.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight/8);var lenOfPage=document.body.scrollHeight;return "
-                "lenOfPage;")
+                "lenOfPage;"
+            )
 
         if lastCount == lenOfPage:
             match = True
@@ -313,9 +340,9 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
     option.add_argument("--disable-extensions")
 
     # Pass the argument 1 to allow and 2 to block
-    option.add_experimental_option("prefs", {
-        "profile.default_content_setting_values.notifications": 1
-    })
+    option.add_experimental_option(
+        "prefs", {"profile.default_content_setting_values.notifications": 1}
+    )
 
     # chromedriver should be in the same folder as file
     browser = webdriver.Chrome(executable_path="./chromedriver", options=option)
@@ -327,7 +354,9 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
     if scrape_comment:
         # first uncollapse collapsed comments
         unCollapseCommentsButtonsXPath = '//a[contains(@class,"_666h")]'
-        unCollapseCommentsButtons = browser.find_elements_by_xpath(unCollapseCommentsButtonsXPath)
+        unCollapseCommentsButtons = browser.find_elements_by_xpath(
+            unCollapseCommentsButtonsXPath
+        )
         for unCollapseComment in unCollapseCommentsButtons:
             action = webdriver.common.action_chains.ActionChains(browser)
             try:
@@ -340,7 +369,9 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
                 pass
 
         # second set comment ranking to show all comments
-        rankDropdowns = browser.find_elements_by_class_name('_2pln')  # select boxes who have rank dropdowns
+        rankDropdowns = browser.find_elements_by_class_name(
+            "_2pln"
+        )  # select boxes who have rank dropdowns
         rankXPath = '//div[contains(concat(" ", @class, " "), "uiContextualLayerPositioner") and not(contains(concat(" ", @class, " "), "hidden_elem"))]//div/ul/li/a[@class="_54nc"]/span/span/div[@data-ordering="RANKED_UNFILTERED"]'
         for rankDropdown in rankDropdowns:
             # click to open the filter modal
@@ -353,7 +384,9 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
                 pass
 
             # if modal is opened filter comments
-            ranked_unfiltered = browser.find_elements_by_xpath(rankXPath)  # RANKED_UNFILTERED => (All Comments)
+            ranked_unfiltered = browser.find_elements_by_xpath(
+                rankXPath
+            )  # RANKED_UNFILTERED => (All Comments)
             if len(ranked_unfiltered) > 0:
                 try:
                     ranked_unfiltered[0].click()
@@ -380,7 +413,7 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
     source_data = browser.page_source
 
     # Throw your source into BeautifulSoup and start parsing!
-    bs_data = bs(source_data, 'html.parser')
+    bs_data = bs(source_data, "html.parser")
 
     postBigDict = _extract_html(source_data, bs_data)
 
@@ -392,15 +425,17 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
 
 
 def parseSoup(bs_data):
-    data = [tag.text for tag in
-            bs_data.find_all(lambda tag: tag.name == 'div' and 'text-align:' in tag.get('style', ''))]
+    data = [
+        tag.text
+        for tag in bs_data.find_all(
+            lambda tag: tag.name == "div" and "text-align:" in tag.get("style", "")
+        )
+    ]
     # print(data)
 
-    posts = [post.replace('… See more', '...')
-        for post in get_posts(bs_data)
-    ]
+    posts = [post.replace("… See more", "...") for post in get_posts(bs_data)]
     return posts
-    print('\n\n-----------------------\n\n'.join(posts))
+    print("\n\n-----------------------\n\n".join(posts))
     # Convert the extracted information to a JSON string
     json_data = json.dumps(data)
 
@@ -409,7 +444,7 @@ def parseSoup(bs_data):
     # print('\n------------------------------------------\n'.join(python_dict))
 
 
-def extract_local(fname_in, num_posts, fname_out = None):
+def extract_local(fname_in, num_posts, fname_out=None):
     with open(fname_in, "r", encoding="utf8") as f:
         html = f.read()
 
@@ -417,29 +452,50 @@ def extract_local(fname_in, num_posts, fname_out = None):
     posts = parseSoup(soup)[:num_posts]
 
     if fname_out:
-        with open(fname_out, 'w') as f:
+        with open(fname_out, "w") as f:
             for post in posts:
-                f.write(post + '\nPOST!!!BREAK')
+                f.write(post + "\n" + POST_BREAK)
     return posts
+
 
 def main():
 
     parser = argparse.ArgumentParser(description="Facebook Page Scraper")
     required_parser = parser.add_argument_group("required arguments")
-    required_parser.add_argument('-page', '-p', help="The Facebook Public Page you want to scrape", required=True)
+    required_parser.add_argument(
+        "-page", "-p", help="The Facebook Public Page you want to scrape", required=True
+    )
     optional_parser = parser.add_argument_group("optional arguments")
-    optional_parser.add_argument('-len', '-l', help="Number of Posts you want to scrape", type=int, default=5)
-    optional_parser.add_argument('-out', '-o', help="Name of file to write to", default=None)
-    optional_parser.add_argument('-infinite', '-i',
-                                 help="Scroll until the end of the page (1 = infinite) (Default is 0)", type=int,
-                                 default=0)
-    optional_parser.add_argument('-usage', '-u', help="What to do with the data: "
-                                                      "Print on Screen (PS), "
-                                                      "Write to Text File (WT) (Default is WT)", default="CSV")
+    optional_parser.add_argument(
+        "-len", "-l", help="Number of Posts you want to scrape", type=int, default=5
+    )
+    optional_parser.add_argument(
+        "-out", "-o", help="Name of file to write to", default=None
+    )
+    optional_parser.add_argument(
+        "-infinite",
+        "-i",
+        help="Scroll until the end of the page (1 = infinite) (Default is 0)",
+        type=int,
+        default=0,
+    )
+    optional_parser.add_argument(
+        "-usage",
+        "-u",
+        help="What to do with the data: "
+        "Print on Screen (PS), "
+        "Write to Text File (WT) (Default is WT)",
+        default="CSV",
+    )
 
-    optional_parser.add_argument('-comments', '-c', help="Scrape ALL Comments of Posts (y/n) (Default is n). When "
-                                                         "enabled for pages where there are a lot of comments it can "
-                                                         "take a while", default="No")
+    optional_parser.add_argument(
+        "-comments",
+        "-c",
+        help="Scrape ALL Comments of Posts (y/n) (Default is n). When "
+        "enabled for pages where there are a lot of comments it can "
+        "take a while",
+        default="No",
+    )
     args = parser.parse_args()
 
     infinite = False
@@ -447,30 +503,46 @@ def main():
         infinite = True
 
     scrape_comment = False
-    if args.comments == 'y':
+    if args.comments == "y":
         scrape_comment = True
 
     if isfile(args.page):
         extract_local(args.page, args.len, args.out)
 
     else:
-            
-        postBigDict = extract(page=args.page, numOfPost=args.len, infinite_scroll=infinite, scrape_comment=scrape_comment)
+
+        postBigDict = extract(
+            page=args.page,
+            numOfPost=args.len,
+            infinite_scroll=infinite,
+            scrape_comment=scrape_comment,
+        )
 
         # TODO: rewrite parser
         if args.usage == "WT":
-            with open('output.txt', 'w') as file:
+            with open("output.txt", "w") as file:
                 for post in postBigDict:
                     file.write(json.dumps(post))  # use json load to recover
 
         elif args.usage == "CSV":
-            with open('data.csv', 'w', ) as csvfile:
+            with open(
+                "data.csv",
+                "w",
+            ) as csvfile:
                 writer = csv.writer(csvfile)
                 # writer.writerow(['Post', 'Link', 'Image', 'Comments', 'Reaction'])
-                writer.writerow(['Post', 'Link', 'Image', 'Comments', 'Shares'])
+                writer.writerow(["Post", "Link", "Image", "Comments", "Shares"])
 
                 for post in postBigDict:
-                    writer.writerow([post['Post'], post['Link'], post['Image'], post['Comments'], post['Shares']])
+                    writer.writerow(
+                        [
+                            post["Post"],
+                            post["Link"],
+                            post["Image"],
+                            post["Comments"],
+                            post["Shares"],
+                        ]
+                    )
                     # writer.writerow([post['Post'], post['Link'],post['Image'], post['Comments'], post['Reaction']])
 
         else:
