@@ -1,2 +1,4 @@
 _-_*
 scraper/subjects/*.txt
+credentials/
+__pycache__

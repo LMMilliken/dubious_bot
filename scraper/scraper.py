@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup as bs
 
 from bs_utils import get_posts
 
-with open('_-_facebook_credentials.txt') as file:
+with open('credentials/facebook_credentials.txt') as file:
     EMAIL = file.readline()
     PASSWORD = file.readline()
 
