@@ -6,7 +6,7 @@ from os.path import isfile
 
 import selenium.common.exceptions
 from bs4 import BeautifulSoup as bs
-from bs_utils import get_posts
+from dubious_bot.scraper.bs_utils import get_posts
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -292,7 +292,8 @@ def _scroll(browser, infinite_scroll, lenOfPage):
             )
             # Find all divs between ::before and ::after
             divs = before.find_elements_by_xpath(
-                "following-sibling::*[preceding-sibling::*[contains(@class,'::before')] and following-sibling::*[contains(@class,'::after')] and self::div]"
+                "following-sibling::*[preceding-sibling::*[contains(@class,'::before')] "
+                "and following-sibling::*[contains(@class,'::after')] and self::div]"
             )
             # Append the list of divs to the main list
             divs_list.append([div.text for div in divs])
@@ -305,7 +306,8 @@ def _scroll(browser, infinite_scroll, lenOfPage):
         print("----------------------------------")
         posts = browser.find_elements_by_xpath("//div[contains(@style,'text-align:')]")
         divs = browser.find_elements_by_xpath(
-            "//div[preceding-sibling::*[contains(@class,'::before')] and following-sibling::*[contains(@class,'::after')]]"
+            "//div[preceding-sibling::*[contains(@class,'::before')] and "
+            "following-sibling::*[contains(@class,'::after')]]"
         )
 
         print("----------------------------------")
@@ -320,12 +322,14 @@ def _scroll(browser, infinite_scroll, lenOfPage):
 
         if infinite_scroll:
             lenOfPage = browser.execute_script(
-                "window.scrollTo(0, document.body.scrollHeight);var lenOfPage=document.body.scrollHeight;return "
+                "window.scrollTo(0, document.body.scrollHeight);var "
+                "lenOfPage=document.body.scrollHeight;return "
                 "lenOfPage;"
             )
         else:
             browser.execute_script(
-                "window.scrollTo(0, document.body.scrollHeight/8);var lenOfPage=document.body.scrollHeight;return "
+                "window.scrollTo(0, document.body.scrollHeight/8);var "
+                "lenOfPage=document.body.scrollHeight;return "
                 "lenOfPage;"
             )
 
@@ -444,19 +448,20 @@ def parseSoup(bs_data):
     # print('\n------------------------------------------\n'.join(python_dict))
 
 
-def extract_local(fname_in, num_posts, fname_out=None):
+def extract_local(fname_in, num_posts, fname_out=None, min_length = 0):
     with open(fname_in, "r", encoding="utf8") as f:
         html = f.read()
 
     soup = bs(html, "html.parser")
-    posts = parseSoup(soup)[:num_posts]
+    posts = [post for post in 
+        parseSoup(soup)
+        if len(post) > min_length][:num_posts]
 
     if fname_out:
         with open(fname_out, "w") as f:
             for post in posts:
                 f.write(post + "\n" + POST_BREAK)
     return posts
-
 
 def main():
 
@@ -471,6 +476,13 @@ def main():
     )
     optional_parser.add_argument(
         "-out", "-o", help="Name of file to write to", default=None
+    )
+    optional_parser.add_argument(
+        "-min",
+        "-m",
+        help="The minimum length that a post needs to be for it to be kept",
+        tpye=int,
+        default=0,
     )
     optional_parser.add_argument(
         "-infinite",

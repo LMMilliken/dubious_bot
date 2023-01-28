@@ -32,11 +32,11 @@ class Prompt:
         self.stop = stop
 
     def __str__(self):
-        ret = ''
+        ret = ""
         if self.question:
             ret += self.stop + self.question
             if self.answer:
-                ret += '\n'
+                ret += "\n"
         if self.answer:
             ret += self.start + self.answer
         return ret
@@ -56,7 +56,7 @@ class Writer:
 
     preamble: str
     logs: list[Prompt]
-    memory: int             #TODO: figure out memory (no way it works atm)
+    memory: int  # TODO: figure out memory (no way it works atm)
 
     def __init__(
         self,
@@ -71,7 +71,7 @@ class Writer:
             current_dir = os.path.dirname(os.path.abspath(__file__))
             fname = current_dir + "/preambles.txt"
             with open(fname, "r") as f:
-                preambles = f.read().split("PREAMBLE!!!BREAK")
+                preambles = f.read().split("\nPREAMBLE!!!BREAK\n")
                 self.preamble = preambles[preamble_num]
 
         self.logs = logs or []
@@ -81,11 +81,11 @@ class Writer:
         return {
             "preamble": self.preamble,
             "memory": self.memory,
-            "logs": [dict(log) for log in self.logs],
+            "logs": [log.__dict__() for log in self.logs],
         }
 
     def make_prompt(self, next_prompt: Optional[Prompt] = None) -> str:
-        ret = self.preamble + '\n'
+        ret = self.preamble + "\n"
         ret += "\n".join(
             [
                 str(prompt)
@@ -98,7 +98,7 @@ class Writer:
         if next_prompt:
             ret += "\n" + str(next_prompt)
             self.logs.append(next_prompt)
-        ret += '\n' + START_SEQUENCE + ' '
+        ret += "\n" + START_SEQUENCE + " "
         return ret
 
     def remember(self, duration: Optional[int] = None):
@@ -110,12 +110,11 @@ class Writer:
                 prompt.must_include = True
 
     def dump_logs(self, fname: Optional[str] = None):
-        json_data = json.dumps(dict(self))
         if fname:
             with open(fname, "w") as f:
-                json.dump(json_data, f)
+                json.dump(self.__dict__(), f, indent=4)
 
-        return json_data
+        return self.__dict__()
 
     @staticmethod
     def from_json(fname: str):
@@ -146,7 +145,7 @@ class Writer:
         memory: Optional[int] = None,
     ):
         with open(fname, "r") as f:
-            posts = f.read().split(POST_BREAK)[1:]
+            posts = f.read().split(POST_BREAK)
         prompts = [Prompt(answer=post, must_include=True) for post in posts]
         writer = Writer(preamble=preamble, logs=prompts)
         if memory:

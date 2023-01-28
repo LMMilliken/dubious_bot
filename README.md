@@ -23,7 +23,9 @@ chrome driver isnt working, so currently just reading and scraping local files
 
 ## Brain
 
-The part that constructs prompts for gpt-3 and gets responses. Not implemented yet
+The part that constructs prompts for gpt-3 and gets responses.
+Can currently generate a prompt based on a preamble, a list of a user's previous posts,
+and additional prompts provided by the user.
 
 ### TODO for brain:
 - Finalize preamble
@@ -33,13 +35,6 @@ The part that constructs prompts for gpt-3 and gets responses. Not implemented y
 - test endpoint with subject1
 
 ### Features for Brain
-
-#### Must haves
-
-- Make preamble given posts
-- send prompt/return response
-  - keep a log of conversation
-  - return just the response
 
 #### Should haves
 - Shorten the conversation logs to reduce tokens per query

@@ -1,8 +1,8 @@
 import os
 
 import openai
-from dubious_bot.brain.writer import Prompt, Writer
 
+from dubious_bot.brain.writer import Prompt, Writer
 from dubious_bot.constants import START_SEQUENCE, STOP_SEQUENCE
 
 with open("credentials/openai_key.txt", "r") as f:
@@ -13,20 +13,18 @@ restart_sequence = "\n" + STOP_SEQUENCE + " "
 
 
 def complete(
-    prompt: str, 
+    prompt: str,
     writer: Writer,
-    temperature: float = 0.8,
-    max_tokens: int = 200,
-    top_p = 1,
-    frequency_penalty=0,
-    presence_penalty=0.6,
-    stop=[START_SEQUENCE, STOP_SEQUENCE]
-    ):
+    temperature: float,
+    max_tokens: int,
+    top_p,
+    frequency_penalty,
+    presence_penalty,
+    stop,
+):
     prompt = Prompt(prompt)
 
     full_prompt = writer.make_prompt(prompt)
-
-    print(full_prompt)
 
     response = openai.Completion.create(
         model="text-davinci-003",
@@ -38,6 +36,8 @@ def complete(
         presence_penalty=presence_penalty,
         stop=stop,
     )
+    response_text = response.choices[0].text
 
-    print(response)
-    return response
+    prompt.answer = response_text
+
+    return response_text
