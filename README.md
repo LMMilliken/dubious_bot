@@ -27,12 +27,6 @@ The part that constructs prompts for gpt-3 and gets responses.
 Can currently generate a prompt based on a preamble, a list of a user's previous posts,
 and additional prompts provided by the user.
 
-### TODO for brain:
-- Finalize preamble
-- choose what posts to pass
-- test endpoint with custom personas
-- test endpoint with subject1
-
 ### Features for Brain
 
 #### Should haves
