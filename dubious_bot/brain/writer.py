@@ -17,7 +17,7 @@ class Prompt:
 
     def __init__(
         self,
-        question: str,
+        question: Optional[str] = None,
         answer: Optional[str] = None,
         time: Optional[datetime] = None,
         must_include: bool = False,
@@ -32,9 +32,13 @@ class Prompt:
         self.stop = stop
 
     def __str__(self):
-        ret = self.stop + self.question
+        ret = ''
+        if self.question:
+            ret += self.stop + self.question
+            if self.answer:
+                ret += '\n'
         if self.answer:
-            ret += "\n" + self.start + self.answer
+            ret += self.start + self.answer
         return ret
 
     def __dict__(self):
@@ -52,7 +56,7 @@ class Writer:
 
     preamble: str
     logs: list[Prompt]
-    memory: int
+    memory: int             #TODO: figure out memory (no way it works atm)
 
     def __init__(
         self,
@@ -65,7 +69,7 @@ class Writer:
         else:
             preamble_num = preamble or 0
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            fname = current_dir + "preambles.txt"
+            fname = current_dir + "/preambles.txt"
             with open(fname, "r") as f:
                 preambles = f.read().split("PREAMBLE!!!BREAK")
                 self.preamble = preambles[preamble_num]
@@ -81,7 +85,7 @@ class Writer:
         }
 
     def make_prompt(self, next_prompt: Optional[Prompt] = None) -> str:
-        ret = self.preamble
+        ret = self.preamble + '\n'
         ret += "\n".join(
             [
                 str(prompt)
@@ -94,7 +98,16 @@ class Writer:
         if next_prompt:
             ret += "\n" + str(next_prompt)
             self.logs.append(next_prompt)
+        ret += '\n' + START_SEQUENCE + ' '
         return ret
+
+    def remember(self, duration: Optional[int] = None):
+        if not duration:
+            duration = self.memory
+        now = datetime.now()
+        for prompt in self.logs:
+            if now - prompt < duration:
+                prompt.must_include = True
 
     def dump_logs(self, fname: Optional[str] = None):
         json_data = json.dumps(dict(self))
@@ -133,6 +146,9 @@ class Writer:
         memory: Optional[int] = None,
     ):
         with open(fname, "r") as f:
-            posts = f.read().split(POST_BREAK)
-        prompts = [Prompt(question=post, must_include=True) for post in posts]
-        writer = Writer()
+            posts = f.read().split(POST_BREAK)[1:]
+        prompts = [Prompt(answer=post, must_include=True) for post in posts]
+        writer = Writer(preamble=preamble, logs=prompts)
+        if memory:
+            writer.memory = memory
+        return writer
