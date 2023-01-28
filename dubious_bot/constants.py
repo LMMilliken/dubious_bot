@@ -1,5 +1,7 @@
-START_SEQUENCE = 'SUBJECT:'
-STOP_SEQUENCE = 'THECORD:'
-POST_BREAK = 'POST!!!BREAK'
-SUBJECTS_PATH = 'dubious_bot/data/subjects/'
-DEFAULT_PERSONA = 'dubious_bot/data/logs/default_persona.json'
+START_SEQUENCE = "SUBJECT:"
+STOP_SEQUENCE = "THECORD:"
+POST_BREAK = "POST!!!BREAK"
+SUBJECTS_PATH = "dubious_bot/data/subjects/"
+LOGS_PATH = "dubious_bot/data/logs/"
+DEFAULT_PERSONA = LOGS_PATH + "default_persona.json"
+ROBOT_NAME = "robot"

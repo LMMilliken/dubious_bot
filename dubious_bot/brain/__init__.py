@@ -1,8 +1,9 @@
+from datetime import datetime, timedelta
 from typing import Optional
 
 from dubious_bot.brain.api import complete
 from dubious_bot.brain.writer import Prompt, Writer
-from dubious_bot.constants import DEFAULT_PERSONA, START_SEQUENCE, STOP_SEQUENCE
+from dubious_bot.constants import DEFAULT_PERSONA, LOGS_PATH, START_SEQUENCE, STOP_SEQUENCE
 
 default_writer = Writer.from_json(DEFAULT_PERSONA)
 
@@ -29,4 +30,9 @@ def ask(
         presence_penalty=presence_penalty,
         stop=stop,
     )
+
+    if not writer.last_dump or datetime.now() - writer.last_dump > timedelta(writer.memory):
+        writer.dump_logs()
+        writer.last_dump = datetime.now()
+        
     return res

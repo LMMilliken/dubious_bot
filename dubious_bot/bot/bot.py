@@ -1,13 +1,12 @@
 import discord
 from dubious_bot.brain.writer import Writer
-from dubious_bot.constants import DEFAULT_PERSONA
+from dubious_bot.constants import DEFAULT_PERSONA, ROBOT_NAME
 import responses
 # ip8rSKVtxRb3tzj
 
-async def send_message(message, user_message):
+async def send_message(message, response):
     try:
 
-        response = responses.get_response(user_message)
         await message.channel.send(response)
 
     except Exception as e:
@@ -24,13 +23,19 @@ def run_discord_bot():
 
     client = discord.Client(intents=intents)
 
+    guild = client.guilds[0]
+
     writer = Writer.from_json(DEFAULT_PERSONA)
+
+    bot_member = guild.get_member(client.user.id)
 
     @client.event
     async def on_ready():
         print(f'{client.user} is now running')
         print(f'Using persona: {writer.name}')
 
+
+        await bot_member.edit(nick=writer.name)
 
 
     @client.event
@@ -39,3 +44,10 @@ def run_discord_bot():
             username = str(message.author)
             user_message = str(message.content)
             channel = str(message.channel)
+
+            if user_message.startswith(f'hey {writer.name}'):
+                response = responses.respond_human(user_message, writer)
+                await send_message(message, response)
+            elif user_message.lower().startswith(f'hey {ROBOT_NAME}'):
+                (response, writer) = await responses.respond_robot(user_message, writer)
+                await send_message(message, response)

@@ -5,11 +5,11 @@ import openai
 from dubious_bot.brain.writer import Prompt, Writer
 from dubious_bot.constants import START_SEQUENCE, STOP_SEQUENCE
 
-with open('credentials/openai_key.txt', 'r') as f:
+with open("credentials/openai_key.txt", "r") as f:
     openai.api_key = f.read()
 
-start_sequence = '\n' + START_SEQUENCE
-restart_sequence = '\n' + STOP_SEQUENCE + ' '
+start_sequence = "\n" + START_SEQUENCE
+restart_sequence = "\n" + STOP_SEQUENCE + " "
 
 
 def complete(
@@ -27,7 +27,7 @@ def complete(
     full_prompt = writer.make_prompt(prompt)
 
     response = openai.Completion.create(
-        model='text-davinci-003',
+        model="text-davinci-003",
         prompt=full_prompt,
         temperature=temperature,
         max_tokens=max_tokens,
