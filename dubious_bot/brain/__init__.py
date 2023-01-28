@@ -2,9 +2,9 @@ from typing import Optional
 
 from dubious_bot.brain.api import complete
 from dubious_bot.brain.writer import Prompt, Writer
-from dubious_bot.constants import START_SEQUENCE, STOP_SEQUENCE, SUBJECTS_PATH
+from dubious_bot.constants import DEFAULT_PERSONA, START_SEQUENCE, STOP_SEQUENCE
 
-default_writer = Writer.from_posts(SUBJECTS_PATH + "persona1_posts.txt")
+default_writer = Writer.from_json(DEFAULT_PERSONA)
 
 
 def ask(

@@ -12,167 +12,167 @@ from selenium.webdriver.chrome.options import Options
 
 from dubious_bot.constants import POST_BREAK
 
-with open("credentials/facebook_credentials.txt") as file:
+with open('credentials/facebook_credentials.txt') as file:
     EMAIL = file.readline()
     PASSWORD = file.readline()
 
 
 def _extract_post_text(item):
-    actualPosts = item.find_all(attrs={"data-testid": "post_message"})
-    text = ""
+    actualPosts = item.find_all(attrs={'data-testid': 'post_message'})
+    text = ''
     if actualPosts:
         for posts in actualPosts:
-            paragraphs = posts.find_all("p")
-            text = ""
+            paragraphs = posts.find_all('p')
+            text = ''
             for index in range(0, len(paragraphs)):
                 text += paragraphs[index].text
     return text
 
 
 def _extract_link(item):
-    postLinks = item.find_all(class_="_6ks")
-    link = ""
+    postLinks = item.find_all(class_='_6ks')
+    link = ''
     for postLink in postLinks:
-        link = postLink.find("a").get("href")
+        link = postLink.find('a').get('href')
     return link
 
 
 def _extract_post_id(item):
-    print("THIS IS AN ITEM:", item)
-    postIds = item.find_all(class_="_5pcq")
-    post_id = ""
+    print('THIS IS AN ITEM:', item)
+    postIds = item.find_all(class_='_5pcq')
+    post_id = ''
     for postId in postIds:
-        post_id = f"https://www.facebook.com{postId.get('href')}"
+        post_id = f'https://www.facebook.com{postId.get('href')}'
     return post_id
 
 
 def _extract_image(item):
-    postPictures = item.find_all(class_="scaledImageFitWidth img")
-    image = ""
+    postPictures = item.find_all(class_='scaledImageFitWidth img')
+    image = ''
     for postPicture in postPictures:
-        image = postPicture.get("src")
+        image = postPicture.get('src')
     return image
 
 
 def _extract_shares(item):
-    postShares = item.find_all(class_="_4vn1")
-    shares = ""
+    postShares = item.find_all(class_='_4vn1')
+    shares = ''
     for postShare in postShares:
 
         x = postShare.string
         if x is not None:
-            x = x.split(">", 1)
+            x = x.split('>', 1)
             shares = x
         else:
-            shares = "0"
+            shares = '0'
     return shares
 
 
 def _extract_comments(item):
-    postComments = item.findAll("div", {"class": "_4eek"})
+    postComments = item.findAll('div', {'class': '_4eek'})
     comments = dict()
     # print(postDict)
     for comment in postComments:
-        if comment.find(class_="_6qw4") is None:
+        if comment.find(class_='_6qw4') is None:
             continue
 
-        commenter = comment.find(class_="_6qw4").text
+        commenter = comment.find(class_='_6qw4').text
         comments[commenter] = dict()
 
-        comment_text = comment.find("span", class_="_3l3x")
+        comment_text = comment.find('span', class_='_3l3x')
 
         if comment_text is not None:
-            comments[commenter]["text"] = comment_text.text
+            comments[commenter]['text'] = comment_text.text
 
-        comment_link = comment.find(class_="_ns_")
+        comment_link = comment.find(class_='_ns_')
         if comment_link is not None:
-            comments[commenter]["link"] = comment_link.get("href")
+            comments[commenter]['link'] = comment_link.get('href')
 
-        comment_pic = comment.find(class_="_2txe")
+        comment_pic = comment.find(class_='_2txe')
         if comment_pic is not None:
-            comments[commenter]["image"] = comment_pic.find(class_="img").get("src")
+            comments[commenter]['image'] = comment_pic.find(class_='img').get('src')
 
-        commentList = item.find("ul", {"class": "_7791"})
+        commentList = item.find('ul', {'class': '_7791'})
         if commentList:
             comments = dict()
-            comment = commentList.find_all("li")
+            comment = commentList.find_all('li')
             if comment:
                 for litag in comment:
-                    aria = litag.find("div", {"class": "_4eek"})
+                    aria = litag.find('div', {'class': '_4eek'})
                     if aria:
-                        commenter = aria.find(class_="_6qw4").text
+                        commenter = aria.find(class_='_6qw4').text
                         comments[commenter] = dict()
-                        comment_text = litag.find("span", class_="_3l3x")
+                        comment_text = litag.find('span', class_='_3l3x')
                         if comment_text:
-                            comments[commenter]["text"] = comment_text.text
-                            # print(str(litag)+"\n")
+                            comments[commenter]['text'] = comment_text.text
+                            # print(str(litag)+'\n')
 
-                        comment_link = litag.find(class_="_ns_")
+                        comment_link = litag.find(class_='_ns_')
                         if comment_link is not None:
-                            comments[commenter]["link"] = comment_link.get("href")
+                            comments[commenter]['link'] = comment_link.get('href')
 
-                        comment_pic = litag.find(class_="_2txe")
+                        comment_pic = litag.find(class_='_2txe')
                         if comment_pic is not None:
-                            comments[commenter]["image"] = comment_pic.find(
-                                class_="img"
-                            ).get("src")
+                            comments[commenter]['image'] = comment_pic.find(
+                                class_='img'
+                            ).get('src')
 
-                        repliesList = litag.find(class_="_2h2j")
+                        repliesList = litag.find(class_='_2h2j')
                         if repliesList:
-                            reply = repliesList.find_all("li")
+                            reply = repliesList.find_all('li')
                             if reply:
-                                comments[commenter]["reply"] = dict()
+                                comments[commenter]['reply'] = dict()
                                 for litag2 in reply:
-                                    aria2 = litag2.find("div", {"class": "_4efk"})
+                                    aria2 = litag2.find('div', {'class': '_4efk'})
                                     if aria2:
-                                        replier = aria2.find(class_="_6qw4").text
+                                        replier = aria2.find(class_='_6qw4').text
                                         if replier:
-                                            comments[commenter]["reply"][
+                                            comments[commenter]['reply'][
                                                 replier
                                             ] = dict()
 
                                             reply_text = litag2.find(
-                                                "span", class_="_3l3x"
+                                                'span', class_='_3l3x'
                                             )
                                             if reply_text:
-                                                comments[commenter]["reply"][replier][
-                                                    "reply_text"
+                                                comments[commenter]['reply'][replier][
+                                                    'reply_text'
                                                 ] = reply_text.text
 
-                                            r_link = litag2.find(class_="_ns_")
+                                            r_link = litag2.find(class_='_ns_')
                                             if r_link is not None:
-                                                comments[commenter]["reply"][
-                                                    "link"
-                                                ] = r_link.get("href")
+                                                comments[commenter]['reply'][
+                                                    'link'
+                                                ] = r_link.get('href')
 
-                                            r_pic = litag2.find(class_="_2txe")
+                                            r_pic = litag2.find(class_='_2txe')
                                             if r_pic is not None:
-                                                comments[commenter]["reply"][
-                                                    "image"
-                                                ] = r_pic.find(class_="img").get("src")
+                                                comments[commenter]['reply'][
+                                                    'image'
+                                                ] = r_pic.find(class_='img').get('src')
     return comments
 
 
 def _extract_reaction(item):
-    toolBar = item.find_all(attrs={"role": "toolbar"})
+    toolBar = item.find_all(attrs={'role': 'toolbar'})
 
     if not toolBar:  # pretty fun
         return
     reaction = dict()
     for toolBar_child in toolBar[0].children:
-        str = toolBar_child["data-testid"]
-        reaction = str.split("UFI2TopReactions/tooltip_")[1]
+        str = toolBar_child['data-testid']
+        reaction = str.split('UFI2TopReactions/tooltip_')[1]
 
         reaction[reaction] = 0
 
         for toolBar_child_child in toolBar_child.children:
 
-            num = toolBar_child_child["aria-label"].split()[0]
+            num = toolBar_child_child['aria-label'].split()[0]
 
             # fix weird ',' happening in some reaction values
-            num = num.replace(",", ".")
+            num = num.replace(',', '.')
 
-            if "K" in num:
+            if 'K' in num:
                 realNum = float(num[:-1]) * 1000
             else:
                 realNum = float(num)
@@ -182,20 +182,20 @@ def _extract_reaction(item):
 
 
 def _extract_html(source_data, bs_data):
-    with open("./raw.html", "w", encoding="utf-8") as file:
+    with open('./raw.html', 'w', encoding='utf-8') as file:
         file.write(str(source_data))
 
-    with open("./bs.html", "w", encoding="utf-8") as file:
+    with open('./bs.html', 'w', encoding='utf-8') as file:
         file.write(str(bs_data.prettify()))
 
-    k = bs_data.find_all(class_="_5pcr userContentWrapper")
+    k = bs_data.find_all(class_='_5pcr userContentWrapper')
     postBigDict = list()
 
     for item in k:
         postDict = dict()
-        postDict["Post"] = _extract_post_text(item)
-        postDict["Link"] = _extract_link(item)
-        postDict["PostId"] = _extract_post_id(item)
+        postDict['Post'] = _extract_post_text(item)
+        postDict['Link'] = _extract_link(item)
+        postDict['PostId'] = _extract_post_id(item)
         # postDict['Image'] = _extract_image(item)
         # postDict['Shares'] = _extract_shares(item)
         # postDict['Comments'] = _extract_comments(item)
@@ -203,45 +203,45 @@ def _extract_html(source_data, bs_data):
 
         # Add to check
         postBigDict.append(postDict)
-        with open("./postBigDict.json", "w", encoding="utf-8") as file:
+        with open('./postBigDict.json', 'w', encoding='utf-8') as file:
             file.write(
-                json.dumps(postBigDict, ensure_ascii=False).encode("utf-8").decode()
+                json.dumps(postBigDict, ensure_ascii=False).encode('utf-8').decode()
             )
 
     return postBigDict
 
 
 def _enterLoginCredentials(browser, email, password):
-    browser.find_element_by_name("email").send_keys(email)
-    browser.find_element_by_name("pass").send_keys(password)
-    browser.find_elements_by_xpath("//button[text()='Log in'][1]")[0].click()
+    browser.find_element_by_name('email').send_keys(email)
+    browser.find_element_by_name('pass').send_keys(password)
+    browser.find_elements_by_xpath('//button[text()='Log in'][1]')[0].click()
 
 
 def _login(browser, email, password):
-    browser.get("http://facebook.com")
+    browser.get('http://facebook.com')
     browser.maximize_window()
     time.sleep(1)
     try:
         _enterLoginCredentials(browser, email, password)
     except selenium.common.exceptions.ElementClickInterceptedException:
         cookies_button = browser.find_elements_by_xpath(
-            "//button[text()='Only allow essential cookies'][1]"
+            '//button[text()='Only allow essential cookies'][1]'
         )[0]
         cookies_button.click()
         time.sleep(2)
-        browser.find_elements_by_xpath("//button[text()='Log in'][1]")[0].click()
+        browser.find_elements_by_xpath('//button[text()='Log in'][1]')[0].click()
     time.sleep(7)
 
 
 def _count_needed_scrolls(browser, infinite_scroll, numOfPost):
     if infinite_scroll:
         lenOfPage = browser.execute_script(
-            "window.scrollTo(0, document.body.scrollHeight);var lenOfPage=document.body.scrollHeight;return lenOfPage;"
+            'window.scrollTo(0, document.body.scrollHeight);var lenOfPage=document.body.scrollHeight;return lenOfPage;'
         )
     else:
         # roughly 8 post per scroll kindaOf
         lenOfPage = int(numOfPost / 8)
-    print("Number Of Scrolls Needed " + str(lenOfPage))
+    print('Number Of Scrolls Needed ' + str(lenOfPage))
     return lenOfPage
 
 
@@ -252,11 +252,11 @@ def _scroll(browser, infinite_scroll, lenOfPage):
     while not match:
 
         button = browser.find_elements_by_xpath(
-            "//div[@role='button' and normalize-space(text())='See more']"
+            '//div[@role='button' and normalize-space(text())='See more']'
         )[0]
 
         seeMoreButtons = browser.find_elements_by_xpath(
-            "//div[@role='button' and normalize-space(text())='See more']"
+            '//div[@role='button' and normalize-space(text())='See more']'
         )
 
         for button in seeMoreButtons:
@@ -273,13 +273,13 @@ def _scroll(browser, infinite_scroll, lenOfPage):
 
         # Find all elements with ::before class
         before_elements = browser.find_elements_by_xpath(
-            "//*[contains(@class,'::before')]"
+            '//*[contains(@class,'::before')]'
         )
 
-        print("------------------------")
-        print("Len Before", len(before_elements))
+        print('------------------------')
+        print('Len Before', len(before_elements))
         print(before_elements)
-        print("----------------------------------")
+        print('----------------------------------')
 
         # Create a list of lists to store the divs contained within each pair of ::before and ::after
         divs_list = []
@@ -288,49 +288,49 @@ def _scroll(browser, infinite_scroll, lenOfPage):
         for before in before_elements:
             # Find the following ::after element
             after = before.find_element_by_xpath(
-                "following-sibling::*[contains(@class,'::after')]"
+                'following-sibling::*[contains(@class,'::after')]'
             )
             # Find all divs between ::before and ::after
             divs = before.find_elements_by_xpath(
-                "following-sibling::*[preceding-sibling::*[contains(@class,'::before')] "
-                "and following-sibling::*[contains(@class,'::after')] and self::div]"
+                'following-sibling::*[preceding-sibling::*[contains(@class,'::before')] '
+                'and following-sibling::*[contains(@class,'::after')] and self::div]'
             )
             # Append the list of divs to the main list
             divs_list.append([div.text for div in divs])
 
         # Print the final list of lists
-        print("----------------------------------")
-        print("Div_List", divs_list)
-        print("----------------------------------")
+        print('----------------------------------')
+        print('Div_List', divs_list)
+        print('----------------------------------')
 
-        print("----------------------------------")
-        posts = browser.find_elements_by_xpath("//div[contains(@style,'text-align:')]")
+        print('----------------------------------')
+        posts = browser.find_elements_by_xpath('//div[contains(@style,'text-align:')]')
         divs = browser.find_elements_by_xpath(
-            "//div[preceding-sibling::*[contains(@class,'::before')] and "
-            "following-sibling::*[contains(@class,'::after')]]"
+            '//div[preceding-sibling::*[contains(@class,'::before')] and '
+            'following-sibling::*[contains(@class,'::after')]]'
         )
 
-        print("----------------------------------")
+        print('----------------------------------')
         print(divs)
-        print("----------------------------------")
+        print('----------------------------------')
 
         print(len(posts))
         for post in posts:
-            print(post.text, "\n-------------------------------------------\n")
+            print(post.text, '\n-------------------------------------------\n')
 
-        print("----------------------------------")
+        print('----------------------------------')
 
         if infinite_scroll:
             lenOfPage = browser.execute_script(
-                "window.scrollTo(0, document.body.scrollHeight);var "
-                "lenOfPage=document.body.scrollHeight;return "
-                "lenOfPage;"
+                'window.scrollTo(0, document.body.scrollHeight);var '
+                'lenOfPage=document.body.scrollHeight;return '
+                'lenOfPage;'
             )
         else:
             browser.execute_script(
-                "window.scrollTo(0, document.body.scrollHeight/8);var "
-                "lenOfPage=document.body.scrollHeight;return "
-                "lenOfPage;"
+                'window.scrollTo(0, document.body.scrollHeight/8);var '
+                'lenOfPage=document.body.scrollHeight;return '
+                'lenOfPage;'
             )
 
         if lastCount == lenOfPage:
@@ -339,17 +339,17 @@ def _scroll(browser, infinite_scroll, lenOfPage):
 
 def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
     option = Options()
-    option.add_argument("--disable-infobars")
-    option.add_argument("start-maximized")
-    option.add_argument("--disable-extensions")
+    option.add_argument('--disable-infobars')
+    option.add_argument('start-maximized')
+    option.add_argument('--disable-extensions')
 
     # Pass the argument 1 to allow and 2 to block
     option.add_experimental_option(
-        "prefs", {"profile.default_content_setting_values.notifications": 1}
+        'prefs', {'profile.default_content_setting_values.notifications': 1}
     )
 
     # chromedriver should be in the same folder as file
-    browser = webdriver.Chrome(executable_path="./chromedriver", options=option)
+    browser = webdriver.Chrome(executable_path='./chromedriver', options=option)
     _login(browser, EMAIL, PASSWORD)
     browser.get(page)
     lenOfPage = _count_needed_scrolls(browser, infinite_scroll, numOfPost)
@@ -357,7 +357,7 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
 
     if scrape_comment:
         # first uncollapse collapsed comments
-        unCollapseCommentsButtonsXPath = '//a[contains(@class,"_666h")]'
+        unCollapseCommentsButtonsXPath = '//a[contains(@class,'_666h')]'
         unCollapseCommentsButtons = browser.find_elements_by_xpath(
             unCollapseCommentsButtonsXPath
         )
@@ -374,9 +374,9 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
 
         # second set comment ranking to show all comments
         rankDropdowns = browser.find_elements_by_class_name(
-            "_2pln"
+            '_2pln'
         )  # select boxes who have rank dropdowns
-        rankXPath = '//div[contains(concat(" ", @class, " "), "uiContextualLayerPositioner") and not(contains(concat(" ", @class, " "), "hidden_elem"))]//div/ul/li/a[@class="_54nc"]/span/span/div[@data-ordering="RANKED_UNFILTERED"]'
+        rankXPath = '//div[contains(concat(' ', @class, ' '), 'uiContextualLayerPositioner') and not(contains(concat(' ', @class, ' '), 'hidden_elem'))]//div/ul/li/a[@class='_54nc']/span/span/div[@data-ordering='RANKED_UNFILTERED']'
         for rankDropdown in rankDropdowns:
             # click to open the filter modal
             action = webdriver.common.action_chains.ActionChains(browser)
@@ -397,8 +397,8 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
                 except:
                     pass
 
-        moreComments = browser.find_elements_by_xpath('//a[@class="_4sxc _42ft"]')
-        print("Scrolling through to click on more comments")
+        moreComments = browser.find_elements_by_xpath('//a[@class='_4sxc _42ft']')
+        print('Scrolling through to click on more comments')
         while len(moreComments) != 0:
             for moreComment in moreComments:
                 action = webdriver.common.action_chains.ActionChains(browser)
@@ -411,13 +411,13 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
                     # do nothing right here
                     pass
 
-            moreComments = browser.find_elements_by_xpath('//a[@class="_4sxc _42ft"]')
+            moreComments = browser.find_elements_by_xpath('//a[@class='_4sxc _42ft']')
 
     # Now that the page is fully scrolled, grab the source code.
     source_data = browser.page_source
 
     # Throw your source into BeautifulSoup and start parsing!
-    bs_data = bs(source_data, "html.parser")
+    bs_data = bs(source_data, 'html.parser')
 
     postBigDict = _extract_html(source_data, bs_data)
 
@@ -432,14 +432,14 @@ def parseSoup(bs_data):
     data = [
         tag.text
         for tag in bs_data.find_all(
-            lambda tag: tag.name == "div" and "text-align:" in tag.get("style", "")
+            lambda tag: tag.name == 'div' and 'text-align:' in tag.get('style', '')
         )
     ]
     # print(data)
 
-    posts = [post.replace("… See more", "...") for post in get_posts(bs_data)]
+    posts = [post.replace('… See more', '...') for post in get_posts(bs_data)]
     return posts
-    print("\n\n-----------------------\n\n".join(posts))
+    print('\n\n-----------------------\n\n'.join(posts))
     # Convert the extracted information to a JSON string
     json_data = json.dumps(data)
 
@@ -449,64 +449,64 @@ def parseSoup(bs_data):
 
 
 def extract_local(fname_in, num_posts, fname_out=None, min_length = 0):
-    with open(fname_in, "r", encoding="utf8") as f:
+    with open(fname_in, 'r', encoding='utf8') as f:
         html = f.read()
 
-    soup = bs(html, "html.parser")
+    soup = bs(html, 'html.parser')
     posts = [post for post in 
         parseSoup(soup)
         if len(post) > min_length][:num_posts]
 
     if fname_out:
-        with open(fname_out, "w") as f:
+        with open(fname_out, 'w') as f:
             for post in posts:
-                f.write(post + "\n" + POST_BREAK)
+                f.write(post + '\n' + POST_BREAK)
     return posts
 
 def main():
 
-    parser = argparse.ArgumentParser(description="Facebook Page Scraper")
-    required_parser = parser.add_argument_group("required arguments")
+    parser = argparse.ArgumentParser(description='Facebook Page Scraper')
+    required_parser = parser.add_argument_group('required arguments')
     required_parser.add_argument(
-        "-page", "-p", help="The Facebook Public Page you want to scrape", required=True
+        '-page', '-p', help='The Facebook Public Page you want to scrape', required=True
     )
-    optional_parser = parser.add_argument_group("optional arguments")
+    optional_parser = parser.add_argument_group('optional arguments')
     optional_parser.add_argument(
-        "-len", "-l", help="Number of Posts you want to scrape", type=int, default=5
-    )
-    optional_parser.add_argument(
-        "-out", "-o", help="Name of file to write to", default=None
+        '-len', '-l', help='Number of Posts you want to scrape', type=int, default=5
     )
     optional_parser.add_argument(
-        "-min",
-        "-m",
-        help="The minimum length that a post needs to be for it to be kept",
+        '-out', '-o', help='Name of file to write to', default=None
+    )
+    optional_parser.add_argument(
+        '-min',
+        '-m',
+        help='The minimum length that a post needs to be for it to be kept',
         tpye=int,
         default=0,
     )
     optional_parser.add_argument(
-        "-infinite",
-        "-i",
-        help="Scroll until the end of the page (1 = infinite) (Default is 0)",
+        '-infinite',
+        '-i',
+        help='Scroll until the end of the page (1 = infinite) (Default is 0)',
         type=int,
         default=0,
     )
     optional_parser.add_argument(
-        "-usage",
-        "-u",
-        help="What to do with the data: "
-        "Print on Screen (PS), "
-        "Write to Text File (WT) (Default is WT)",
-        default="CSV",
+        '-usage',
+        '-u',
+        help='What to do with the data: '
+        'Print on Screen (PS), '
+        'Write to Text File (WT) (Default is WT)',
+        default='CSV',
     )
 
     optional_parser.add_argument(
-        "-comments",
-        "-c",
-        help="Scrape ALL Comments of Posts (y/n) (Default is n). When "
-        "enabled for pages where there are a lot of comments it can "
-        "take a while",
-        default="No",
+        '-comments',
+        '-c',
+        help='Scrape ALL Comments of Posts (y/n) (Default is n). When '
+        'enabled for pages where there are a lot of comments it can '
+        'take a while',
+        default='No',
     )
     args = parser.parse_args()
 
@@ -515,7 +515,7 @@ def main():
         infinite = True
 
     scrape_comment = False
-    if args.comments == "y":
+    if args.comments == 'y':
         scrape_comment = True
 
     if isfile(args.page):
@@ -531,28 +531,28 @@ def main():
         )
 
         # TODO: rewrite parser
-        if args.usage == "WT":
-            with open("output.txt", "w") as file:
+        if args.usage == 'WT':
+            with open('output.txt', 'w') as file:
                 for post in postBigDict:
                     file.write(json.dumps(post))  # use json load to recover
 
-        elif args.usage == "CSV":
+        elif args.usage == 'CSV':
             with open(
-                "data.csv",
-                "w",
+                'data.csv',
+                'w',
             ) as csvfile:
                 writer = csv.writer(csvfile)
                 # writer.writerow(['Post', 'Link', 'Image', 'Comments', 'Reaction'])
-                writer.writerow(["Post", "Link", "Image", "Comments", "Shares"])
+                writer.writerow(['Post', 'Link', 'Image', 'Comments', 'Shares'])
 
                 for post in postBigDict:
                     writer.writerow(
                         [
-                            post["Post"],
-                            post["Link"],
-                            post["Image"],
-                            post["Comments"],
-                            post["Shares"],
+                            post['Post'],
+                            post['Link'],
+                            post['Image'],
+                            post['Comments'],
+                            post['Shares'],
                         ]
                     )
                     # writer.writerow([post['Post'], post['Link'],post['Image'], post['Comments'], post['Reaction']])
@@ -561,8 +561,8 @@ def main():
             for post in postBigDict:
                 print(post)
 
-        print("Finished")
+        print('Finished')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

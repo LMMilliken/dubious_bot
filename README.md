@@ -30,7 +30,6 @@ and additional prompts provided by the user.
 ### TODO for brain:
 - Finalize preamble
 - choose what posts to pass
-- write endpoint for bot to use <- THE MAIN PART
 - test endpoint with custom personas
 - test endpoint with subject1
 
