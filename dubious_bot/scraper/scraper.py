@@ -42,7 +42,7 @@ def _extract_post_id(item):
     postIds = item.find_all(class_='_5pcq')
     post_id = ''
     for postId in postIds:
-        post_id = f'https://www.facebook.com{postId.get('href')}'
+        post_id = f'https://www.facebook.com{postId.get("href")}'
     return post_id
 
 
@@ -214,7 +214,7 @@ def _extract_html(source_data, bs_data):
 def _enterLoginCredentials(browser, email, password):
     browser.find_element_by_name('email').send_keys(email)
     browser.find_element_by_name('pass').send_keys(password)
-    browser.find_elements_by_xpath('//button[text()='Log in'][1]')[0].click()
+    browser.find_elements_by_xpath('//button[text()="Log in"][1]')[0].click()
 
 
 def _login(browser, email, password):
@@ -225,11 +225,11 @@ def _login(browser, email, password):
         _enterLoginCredentials(browser, email, password)
     except selenium.common.exceptions.ElementClickInterceptedException:
         cookies_button = browser.find_elements_by_xpath(
-            '//button[text()='Only allow essential cookies'][1]'
+            '//button[text()="Only allow essential cookies"][1]'
         )[0]
         cookies_button.click()
         time.sleep(2)
-        browser.find_elements_by_xpath('//button[text()='Log in'][1]')[0].click()
+        browser.find_elements_by_xpath('//button[text()="Log in"][1]')[0].click()
     time.sleep(7)
 
 
@@ -252,11 +252,11 @@ def _scroll(browser, infinite_scroll, lenOfPage):
     while not match:
 
         button = browser.find_elements_by_xpath(
-            '//div[@role='button' and normalize-space(text())='See more']'
+            '//div[@role="button" and normalize-space(text())="See more"]'
         )[0]
 
         seeMoreButtons = browser.find_elements_by_xpath(
-            '//div[@role='button' and normalize-space(text())='See more']'
+            '//div[@role="button" and normalize-space(text())="See more"]'
         )
 
         for button in seeMoreButtons:
@@ -273,7 +273,7 @@ def _scroll(browser, infinite_scroll, lenOfPage):
 
         # Find all elements with ::before class
         before_elements = browser.find_elements_by_xpath(
-            '//*[contains(@class,'::before')]'
+            '//*[contains(@class,"::before")]'
         )
 
         print('------------------------')
@@ -288,12 +288,12 @@ def _scroll(browser, infinite_scroll, lenOfPage):
         for before in before_elements:
             # Find the following ::after element
             after = before.find_element_by_xpath(
-                'following-sibling::*[contains(@class,'::after')]'
+                'following-sibling::*[contains(@class,"::after")]'
             )
             # Find all divs between ::before and ::after
             divs = before.find_elements_by_xpath(
-                'following-sibling::*[preceding-sibling::*[contains(@class,'::before')] '
-                'and following-sibling::*[contains(@class,'::after')] and self::div]'
+                'following-sibling::*[preceding-sibling::*[contains(@class,"::before")] '
+                'and following-sibling::*[contains(@class,"::after")] and self::div]'
             )
             # Append the list of divs to the main list
             divs_list.append([div.text for div in divs])
@@ -304,10 +304,10 @@ def _scroll(browser, infinite_scroll, lenOfPage):
         print('----------------------------------')
 
         print('----------------------------------')
-        posts = browser.find_elements_by_xpath('//div[contains(@style,'text-align:')]')
+        posts = browser.find_elements_by_xpath('//div[contains(@style,"text-align:")]')
         divs = browser.find_elements_by_xpath(
-            '//div[preceding-sibling::*[contains(@class,'::before')] and '
-            'following-sibling::*[contains(@class,'::after')]]'
+            '//div[preceding-sibling::*[contains(@class,"::before")] and '
+            'following-sibling::*[contains(@class,"::after")]]'
         )
 
         print('----------------------------------')
@@ -357,7 +357,7 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
 
     if scrape_comment:
         # first uncollapse collapsed comments
-        unCollapseCommentsButtonsXPath = '//a[contains(@class,'_666h')]'
+        unCollapseCommentsButtonsXPath = '//a[contains(@class,"_666h")]'
         unCollapseCommentsButtons = browser.find_elements_by_xpath(
             unCollapseCommentsButtonsXPath
         )
@@ -376,7 +376,7 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
         rankDropdowns = browser.find_elements_by_class_name(
             '_2pln'
         )  # select boxes who have rank dropdowns
-        rankXPath = '//div[contains(concat(' ', @class, ' '), 'uiContextualLayerPositioner') and not(contains(concat(' ', @class, ' '), 'hidden_elem'))]//div/ul/li/a[@class='_54nc']/span/span/div[@data-ordering='RANKED_UNFILTERED']'
+        rankXPath = '//div[contains(concat(' ', @class, ' '), "uiContextualLayerPositioner") and not(contains(concat(" ", @class, " "), "hidden_elem"))]//div/ul/li/a[@class="_54nc"]/span/span/div[@data-ordering="RANKED_UNFILTERED"]'
         for rankDropdown in rankDropdowns:
             # click to open the filter modal
             action = webdriver.common.action_chains.ActionChains(browser)
@@ -397,7 +397,7 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
                 except:
                     pass
 
-        moreComments = browser.find_elements_by_xpath('//a[@class='_4sxc _42ft']')
+        moreComments = browser.find_elements_by_xpath('//a[@class="_4sxc _42ft"]')
         print('Scrolling through to click on more comments')
         while len(moreComments) != 0:
             for moreComment in moreComments:
@@ -411,7 +411,7 @@ def extract(page, numOfPost, infinite_scroll=False, scrape_comment=False):
                     # do nothing right here
                     pass
 
-            moreComments = browser.find_elements_by_xpath('//a[@class='_4sxc _42ft']')
+            moreComments = browser.find_elements_by_xpath('//a[@class="_4sxc _42ft"]')
 
     # Now that the page is fully scrolled, grab the source code.
     source_data = browser.page_source

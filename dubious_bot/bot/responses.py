@@ -15,15 +15,15 @@ def get_response(message: str) -> str:
     
 
 def respond_human(message: str, writer: Writer):
-    message = message[len('hey '+{writer.name}):]
+    message = message[len(f'hey {writer.name}') + 1:].strip()
     response = brain.ask(message, writer)
     return response
 
 
 async def respond_robot(message: str, writer: Writer, client: Client):
-    message = message[len(f'hey {ROBOT_NAME} ')]
+    message = message[len(f'hey {ROBOT_NAME}')+1:].strip()
     robot_noises = ['BZZT', 'beep boop', '*whirrrr*']
-
+    response = ''
 
     if message.lower().startswith('remember that'):
         if '-v' in message:

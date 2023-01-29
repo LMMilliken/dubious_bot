@@ -121,16 +121,18 @@ class Writer:
                 prompt.must_include = True
 
     def dump_logs(self, fname: Optional[str] = None, within_memory: bool = False):
+        now = datetime.now()
         if not fname:
             fname = (
                 f"{LOGS_PATH}{self.name}-"
-                f'{self.last_dump.strftime(Prompt.time_format).replace(" ", "")}.json'
+                f'{now.strftime(Prompt.time_format).replace(" ", "")}.json'
             )
 
         self.within_memory = within_memory
         with open(fname, "w") as f:
             json.dump(self.__dict__(), f, indent=4)
         del self.within_memory
+        self.last_dump = now
 
     @staticmethod
     def from_json(fname: str):
