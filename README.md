@@ -20,63 +20,29 @@ Given an html file of a user, can extract all 'post's from the file, and return 
 
 chrome driver isnt working, so currently just reading and scraping local files
 
-
 ## Brain
 
 The part that constructs prompts for gpt-3 and gets responses.
-Can currently generate a prompt based on a preamble, a list of a user's previous posts,
-and additional prompts provided by the user.
-
-### Features for Brain
-
-#### Should haves
-- Shorten the conversation logs to reduce tokens per query
-  - see thoughts
-- Function to adjust the preamble/heat
+Can currently generate a prompt based on a preamble, a list of a user's previous posts, and additional prompts provided by the user.
 
 ## Bot
 
-The discord bot that takes commands and forwards them to either scraper or brain, then returns appropriate responses. Not implemented yet
+The discord bot that takes commands and forwards them to either scraper or brain, then returns appropriate responses.
 
-## Thoughts
+The bot can be interacted with using one of two commands, `hey ROBOT` and `hey SUBJECT`, where `SUBJECT` is the name of person the bot is currently 'impersonating'
 
-Number of tokens per request increases as conversation goes on, meaning more expensive too.
-This makes longer dialogues with SUBJECT too expensive, what do we make him forget?
-- If X many minutes pass without SUBJECT being addressed, reset to originial prompt?
-- Let users 'save' chunks of conversation via command?
-  - If they particularly like a conversation, and want the model to continue acting like that
-    - "hey ROBOT, remember that"
-- Maybe this isnt even the case?
-  - Actually it probably is if ur using the API, how couldnt it be
+### `hey SUBJECT`
+This is used to interact with ROBOT's persona, anything after `hey SUBJECT` is added to the conversation logs kept by `brain`
+and is then sent to gpt-3 as a query.
+The response is then sent in the channel the command was posted in.
 
-For given persona/iteration, keep track of the whole conversation as a json of
-```json
-[
-    {
-        question: "hey SUBJECT, whats up?",
-        answer: "oh you know, cant complain",
-        time: xx-xx-xx-xxxx,
-        must_include: False,
-    }
-
-]
-```
-This makes it much easier to choose what to include/remove in the next prompt  
-
-  
-
-Have a different trigger word for conversation and for commands
-- 'hey SUBJECT'
-  - trigger for conversation
-- 'hey ROBOT'
-  - trigger for commands
-- What if SUBJECT == ROBOT?
-  - I dont know
-    - probably fine
-
-Different preambles for different situations?
-- The responses could change depending on how the examples are framed in the preamble, maybe a couple of different candidate preambles that can be switched between wouldnt be too bad
-- "This is a conversation between SUBJECT and THECORD"
-- "This is an argument between SUBJECT and THECORD"
-- and more!
-
+### `hey ROBOT`:
+All commands following `hey ROBOT` are used to interact with the bot itself, not its 'persona'. Possible interactions include:
+- `rename to X` to change name of ROBOT
+  - This updates both the bot's nickname in the server and the name used to address the `SUBJECT`.
+  - TODO: Also update the name used in the 'conversation' created by brain, which will allow ROBOT to recognise its own name in conversation
+- `remember that` to force ROBOT to include recent conversation in all future prompts to gpt-3
+- `become X` to make ROBOT change its persona
+  - can take a dump of a `writer` object as a `.JSON`
+  - can take a list of example posts from a subject as a `.txt`
+  - TODO: take the url of a facebook page, and scrape posts
